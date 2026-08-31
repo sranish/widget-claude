@@ -47,9 +47,27 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "59f4655b-ef93-4e18-b915-1aca9c338332"
+        "projectId": "59f4655b-ef93-4e18-b915-1aca9c338332",
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "com.sranish.claudeusage.widget",
+                  "targetName": "ClaudeUsageWidget"
+                }
+              ]
+            }
+          }
+        }
       }
     },
-    "owner": "shiny088"
+    "owner": "shiny088",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/59f4655b-ef93-4e18-b915-1aca9c338332"
+    }
   }
 }
