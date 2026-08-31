@@ -25,6 +25,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "@bacons/apple-targets",
       [
         "react-native-android-widget",
         {
@@ -43,6 +44,12 @@
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "59f4655b-ef93-4e18-b915-1aca9c338332"
+      }
+    },
+    "owner": "shiny088"
   }
 }
