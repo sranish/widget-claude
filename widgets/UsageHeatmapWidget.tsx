@@ -6,13 +6,17 @@ interface Props {
   grid: number[][]; // [week][day] levels, -1 = future
   total: number;
   cellSize?: number;
+  updatedAt?: string;
   error?: boolean;
 }
 
 const GAP = 3;
 const PADDING = 6;
 
-export function UsageHeatmapWidget({ grid, total, cellSize = 13, error }: Props) {
+export function UsageHeatmapWidget({ grid, total, cellSize = 13, updatedAt, error }: Props) {
+  const updated = updatedAt
+    ? new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
   return (
     <FlexWidget
       style={{
@@ -50,7 +54,11 @@ export function UsageHeatmapWidget({ grid, total, cellSize = 13, error }: Props)
         ))}
       </FlexWidget>
       <TextWidget
-        text={error ? "offline — showing cached data" : `${formatTokens(total)} tokens · last 15 weeks`}
+        text={
+          error
+            ? "offline — showing cached data"
+            : `${formatTokens(total)} tokens · ${grid.length} wks${updated ? ` · upd ${updated}` : ""}`
+        }
         style={{ fontSize: 9, color: THEME.label, marginTop: 4 }}
       />
     </FlexWidget>

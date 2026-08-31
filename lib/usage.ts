@@ -37,7 +37,11 @@ function isoDate(d: Date): string {
  * Builds a WEEKS×7 grid of intensity levels (0–4), columns = weeks (oldest
  * left), rows = Mon..Sun, ending at today. Levels are quartiles of nonzero days.
  */
-export function buildGrid(feed: UsageFeed, now = new Date()): { grid: number[][]; total: number } {
+export function buildGrid(
+  feed: UsageFeed,
+  now = new Date(),
+  weeks: number = WEEKS
+): { grid: number[][]; total: number } {
   const byDate = new Map(feed.days.map((d) => [d.date, d.tokens]));
 
   const nonzero = feed.days.map((d) => d.tokens).filter((t) => t > 0).sort((a, b) => a - b);
@@ -50,11 +54,11 @@ export function buildGrid(feed: UsageFeed, now = new Date()): { grid: number[][]
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const dow = (today.getUTCDay() + 6) % 7; // Mon=0..Sun=6
   const gridStart = new Date(today);
-  gridStart.setUTCDate(today.getUTCDate() - dow - (WEEKS - 1) * 7);
+  gridStart.setUTCDate(today.getUTCDate() - dow - (weeks - 1) * 7);
 
   let total = 0;
   const grid: number[][] = [];
-  for (let w = 0; w < WEEKS; w++) {
+  for (let w = 0; w < weeks; w++) {
     const col: number[] = [];
     for (let d = 0; d < 7; d++) {
       const day = new Date(gridStart);

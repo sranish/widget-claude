@@ -34,12 +34,22 @@ const GAP = 3;
 const PADDING = 6;
 const CAPTION_DP = 16;
 
-function cellSizeFor(props: WidgetTaskHandlerProps, weeks: number): number {
+/**
+ * Smart sizing: cell size comes from widget height (7 rows always fit),
+ * then the number of week columns adapts to the available width.
+ */
+function layoutFor(props: WidgetTaskHandlerProps): { cellSize: number; weeks: number } {
   const width = props.widgetInfo?.width ?? 320;
   const height = props.widgetInfo?.height ?? 150;
-  const byWidth = (width - 2 * PADDING - GAP * (weeks - 1)) / weeks;
-  const byHeight = (height - 2 * PADDING - CAPTION_DP - GAP * 6) / 7;
-  return Math.max(8, Math.floor(Math.min(byWidth, byHeight)));
+  const cellSize = Math.max(
+    10,
+    Math.min(22, Math.floor((height - 2 * PADDING - CAPTION_DP - GAP * 6) / 7))
+  );
+  const weeks = Math.max(
+    4,
+    Math.min(20, Math.floor((width - 2 * PADDING + GAP) / (cellSize + GAP)))
+  );
+  return { cellSize, weeks };
 }
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
@@ -47,22 +57,22 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case "WIDGET_ADDED":
     case "WIDGET_UPDATE":
     case "WIDGET_RESIZED": {
+      const { cellSize, weeks } = layoutFor(props);
       try {
         const { feed, stale } = await getFeed();
-        const { grid, total } = buildGrid(feed);
+        const { grid, total } = buildGrid(feed, new Date(), weeks);
         props.renderWidget(
           <UsageHeatmapWidget
             grid={grid}
             total={total}
-            cellSize={cellSizeFor(props, grid.length)}
+            cellSize={cellSize}
+            updatedAt={feed.updatedAt}
             error={stale}
           />
         );
       } catch {
-        const { grid } = buildGrid({ v: 1, updatedAt: "", days: [] });
-        props.renderWidget(
-          <UsageHeatmapWidget grid={grid} total={0} cellSize={cellSizeFor(props, grid.length)} error />
-        );
+        const { grid } = buildGrid({ v: 1, updatedAt: "", days: [] }, new Date(), weeks);
+        props.renderWidget(<UsageHeatmapWidget grid={grid} total={0} cellSize={cellSize} error />);
       }
       break;
     }
