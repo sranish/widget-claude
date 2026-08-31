@@ -16,10 +16,31 @@ export interface UsageDay {
   tokens: number;
 }
 
+export interface UsageLimit {
+  label: string;
+  pct: number; // 0-100
+  resetsAt?: string; // ISO
+}
+
 export interface UsageFeed {
   v: number;
   updatedAt: string;
   days: UsageDay[];
+  limits?: UsageLimit[];
+}
+
+export function formatReset(resetsAt?: string): string {
+  if (!resetsAt) return "";
+  const d = new Date(resetsAt);
+  if (isNaN(d.getTime())) return "";
+  const ms = d.getTime() - Date.now();
+  if (ms <= 0) return "resets soon";
+  const h = Math.floor(ms / 3600000);
+  if (h < 24) {
+    const m = Math.round((ms % 3600000) / 60000);
+    return `resets in ${h > 0 ? `${h} hr ` : ""}${m} min`;
+  }
+  return `resets ${d.toLocaleDateString([], { weekday: "short" })}, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
 }
 
 export async function fetchUsage(): Promise<UsageFeed> {

@@ -41,7 +41,63 @@ const days = (raw.daily ?? [])
   .sort((a, b) => a.date.localeCompare(b.date))
   .slice(-DAYS_KEPT);
 
-const payload = JSON.stringify({ v: 1, updatedAt: new Date().toISOString(), days }, null, 0);
+// 1b. Fetch plan limit utilization via the same endpoint Claude Code's /usage uses.
+// Unofficial; degrade gracefully if shape changes. Token never leaves this machine.
+async function fetchLimits() {
+  try {
+    const creds = JSON.parse(readFileSync(join(homedir(), ".claude", ".credentials.json"), "utf8"));
+    const token = creds?.claudeAiOauth?.accessToken ?? creds?.accessToken;
+    if (!token) return undefined;
+    const res = await fetch("https://api.anthropic.com/api/oauth/usage", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "anthropic-beta": "oauth-2025-04-20",
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      console.error(`limits fetch: HTTP ${res.status}`);
+      return undefined;
+    }
+    const data = await res.json();
+    if (process.argv.includes("--probe")) console.error(JSON.stringify(data, null, 2));
+
+    // Preferred: the structured `limits` array (kind: session | weekly_all | weekly_scoped)
+    if (Array.isArray(data?.limits) && data.limits.length) {
+      const KIND_LABELS = { session: "Current session", weekly_all: "All models (week)" };
+      return data.limits
+        .filter((l) => typeof l?.percent === "number")
+        .map((l) => ({
+          label:
+            KIND_LABELS[l.kind] ??
+            (l.scope?.model?.display_name
+              ? `${l.scope.model.display_name} (week)`
+              : l.kind.replace(/_/g, " ")),
+          pct: Math.round(l.percent),
+          resetsAt: l.resets_at ?? undefined,
+        }));
+    }
+    // Fallback: legacy top-level utilization objects
+    const LABELS = { five_hour: "Current session", seven_day: "All models (week)" };
+    const limits = [];
+    for (const [key, val] of Object.entries(LABELS)) {
+      const pct = data?.[key]?.utilization;
+      if (typeof pct !== "number") continue;
+      limits.push({ label: val, pct: Math.round(pct), resetsAt: data[key].resets_at ?? undefined });
+    }
+    return limits.length ? limits : undefined;
+  } catch (e) {
+    console.error(`limits fetch failed: ${e.message}`);
+    return undefined;
+  }
+}
+
+const limits = await fetchLimits();
+const payload = JSON.stringify(
+  { v: 1, updatedAt: new Date().toISOString(), days, ...(limits ? { limits } : {}) },
+  null,
+  0
+);
 const tmpFile = join(tmpdir(), GIST_FILENAME);
 writeFileSync(tmpFile, payload);
 

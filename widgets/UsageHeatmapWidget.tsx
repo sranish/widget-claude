@@ -32,6 +32,21 @@ export function UsageHeatmapWidget({ grid, total, cellSize = 13, updatedAt, erro
       clickAction="OPEN_URI"
       clickActionData={{ uri: "https://claude.ai/settings/usage" }}
     >
+      <FlexWidget
+        style={{ flexDirection: "row", width: "match_parent", justifyContent: "flex-end" }}
+      >
+        <TextWidget
+          text="limits ►"
+          clickAction="FLIP_TO_LIMITS"
+          style={{
+            fontSize: 11,
+            color: THEME.label,
+            paddingLeft: 16,
+            paddingBottom: 4,
+            paddingRight: 6,
+          }}
+        />
+      </FlexWidget>
       <FlexWidget style={{ flexDirection: "row" }}>
         {grid.map((week, w) => (
           <FlexWidget
