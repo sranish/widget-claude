@@ -5,13 +5,14 @@ import { THEME, formatTokens } from "../lib/usage";
 interface Props {
   grid: number[][]; // [week][day] levels, -1 = future
   total: number;
+  cellSize?: number;
   error?: boolean;
 }
 
-const CELL = 13;
 const GAP = 3;
+const PADDING = 6;
 
-export function UsageHeatmapWidget({ grid, total, error }: Props) {
+export function UsageHeatmapWidget({ grid, total, cellSize = 13, error }: Props) {
   return (
     <FlexWidget
       style={{
@@ -22,9 +23,10 @@ export function UsageHeatmapWidget({ grid, total, error }: Props) {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        padding: 12,
+        padding: PADDING,
       }}
-      clickAction="OPEN_APP"
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: "https://claude.ai/settings/usage" }}
     >
       <FlexWidget style={{ flexDirection: "row" }}>
         {grid.map((week, w) => (
@@ -36,8 +38,8 @@ export function UsageHeatmapWidget({ grid, total, error }: Props) {
               <FlexWidget
                 key={`d${d}`}
                 style={{
-                  width: CELL,
-                  height: CELL,
+                  width: cellSize,
+                  height: cellSize,
                   borderRadius: 3,
                   marginBottom: d === 6 ? 0 : GAP,
                   backgroundColor: level < 0 ? THEME.background : THEME.levels[level],
@@ -49,7 +51,7 @@ export function UsageHeatmapWidget({ grid, total, error }: Props) {
       </FlexWidget>
       <TextWidget
         text={error ? "offline — showing cached data" : `${formatTokens(total)} tokens · last 15 weeks`}
-        style={{ fontSize: 10, color: THEME.label, marginTop: 8 }}
+        style={{ fontSize: 9, color: THEME.label, marginTop: 4 }}
       />
     </FlexWidget>
   );

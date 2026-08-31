@@ -163,7 +163,8 @@ struct HeatmapView: View {
           .foregroundColor(labelColor)
       }
     }
-    .padding(4)
+    .padding(2)
+    .widgetURL(URL(string: "https://claude.ai/settings/usage"))
     .containerBackground(cardBackground, for: .widget)
   }
 }
